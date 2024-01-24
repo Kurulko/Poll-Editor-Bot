@@ -1,9 +1,12 @@
 # Telegram bot for editing polls
 
-* [Commands](#to-edit-a-poll-use-these-commands-after-sending-a-poll)
+* [Commands](#commands)
 * [Errors](#errors)
-  
-## To edit a poll, use these commands after sending a poll:
+<br/>
+
+## Commands:
+
+### To edit a poll, use these commands after sending a poll:
 
 • **/change_visibility** - edit poll visibility (public/anonymous)<br/>
 • **/change_question** - edit poll question<br/>
@@ -21,15 +24,15 @@
 • **/change_options** - edit all poll options<br/>
 • **/change_is_multiple_answers** - edit - multiple answers<br/>
 
-### For other commands that require a poll:
+#### For other commands that require a poll:
 
 • **/get_text_poll** - get text poll<br/>
 
-## No need to send a poll for these options:
+### No need to send a poll for these options:
 
 • **/create_poll** - create a poll<br/>
 
-### Others:
+#### Others:
 
 • **/start** - start the bot<br/>
 • **/stop** - stop the bot<br/>
