@@ -3,7 +3,6 @@
 * [Commands](#to-edit-a-poll-use-these-commands-after-sending-a-poll)
 * [Errors](#errors)
   
-<br/>
 ## To edit a poll, use these commands after sending a poll:
 
 • **/change_visibility** - edit poll visibility (public/anonymous)<br/>
@@ -38,7 +37,10 @@
 
 ❗️**IMPORTANT**: The quiz must be submitted on your behalf and must be answered if it is not yours.<br/>
 ⚠️**WARNING**: Once the quiz is edited, all the answers will be discarded.<br/>
+<br/>
 
 ## Errors:
 
-
+• **MESSAGE_TYPE_NOT_SUITABLE** - the current message type is not suitable<br/>
+• **MESSAGE_ENTITY_TYPE_NOT_SUPPORTED** - The message entity type is not supported for now<br/>
+• **QUIZ_SENT_INCORRECTLY** - The quiz was sent incorrectly. The quiz must be submitted on your behalf and must be answered if it is not yours<br/>
