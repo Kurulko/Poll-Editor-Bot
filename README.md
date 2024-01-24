@@ -40,7 +40,7 @@
 
 ![image](https://github.com/Kurulko/Poll-Editor-Bot/assets/95112563/bd5024a0-6f0e-4879-89b1-a57cc7444882)
 
-• **/add_option_to_end** - add a poll option to end"<br/>
+• **/add_option_to_end** - add a poll option to end:<br/>
 
 ![image](https://github.com/Kurulko/Poll-Editor-Bot/assets/95112563/69c60076-8657-474f-977c-282162d0a6a8)
 
@@ -48,11 +48,11 @@
 
 ![image](https://github.com/Kurulko/Poll-Editor-Bot/assets/95112563/a69f23d4-2dde-4d8c-8e1e-3f0c6f841846)
 
-• **/change_options** - edit all poll options"<br/>
+• **/change_options** - edit all poll options:<br/>
 
 ![image](https://github.com/Kurulko/Poll-Editor-Bot/assets/95112563/94249b41-a7f7-48ed-9d41-bbca810aaca5)
 
-• **/change_is_multiple_answers** - edit - multiple answers"<br/>
+• **/change_is_multiple_answers** - edit - multiple answers:<br/>
 
 ![image](https://github.com/Kurulko/Poll-Editor-Bot/assets/95112563/719187ac-0896-4f2c-bb0a-453d1859d05f)
 
