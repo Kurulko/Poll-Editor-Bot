@@ -18,5 +18,7 @@ public class ChangePollQuestionByTemplateBotCommand : TwoStepsPollBotCommand
     {
         if (commandStr.Contains("{0}"))
             Poll = pollEditor.ChangePollQuestionByTemplate(commandStr);
+        else
+            Poll = pollEditor.ChangePollQuestion(commandStr);
     }
 }

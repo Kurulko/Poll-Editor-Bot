@@ -1,13 +1,6 @@
 ﻿using PollEditorBot.Commands.ManySteps;
 using PollEditorBot.Commands.TwoSteps;
-using PollEditorBot.Editors;
 using PollEditorBot.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -31,39 +24,26 @@ public class CreatePollBotCommand : ManyStepsPollBotCommand
         IsStrResponse = true;
 
         if (botCommand is ChangePollVisibilityBotCommand)
+            ExecuteBotCommand(() => new ChangePollQuestionBotCommand(Poll), commandStr);
+        else if (botCommand is ChangePollQuestionBotCommand)
             ExecuteBotCommand(() => new ChangeOptionsBotCommand(Poll), commandStr);
         else if (botCommand is ChangeOptionsBotCommand)
             ExecuteBotCommand(() => new ChangePollTypeBotCommand(Poll), commandStr);
         else if (botCommand is ChangePollTypeBotCommand)
-            ExecuteBotCommand(() => new ChangePollQuestionBotCommand(Poll), commandStr);
-        else
-        {
-            if (PollHelper.IsQuiz(Poll))
-            {
-                if (botCommand is ChangePollQuestionBotCommand)
-                    ExecuteBotCommand(() => new ChangePollExplanationBotCommand(Poll), commandStr, true);
-                else if (botCommand is ChangePollExplanationBotCommand)
-                    ExecuteBotCommand(() => new ChangePollOpenPeriodBotCommand(Poll), commandStr, true);
-                else if (botCommand is ChangePollOpenPeriodBotCommand)
-                    ExecuteBotCommand(null, commandStr, true);
-            }
-            else if (botCommand is not null)
-            {
-                if (botCommand is ChangePollQuestionBotCommand)
-                    ExecuteBotCommand(() => new ChangePollOpenPeriodBotCommand(Poll), commandStr, true);
-                else if (botCommand is ChangePollOpenPeriodBotCommand)
-                    ExecuteBotCommand(null, commandStr, true);
-            }
-        }
+            ExecuteBotCommand(() => new ChangePollOpenPeriodBotCommand(Poll), commandStr, true);
+        else if (botCommand is ChangePollOpenPeriodBotCommand)
+            ExecuteBotCommand(PollHelper.IsQuiz(Poll) ? () => new ChangePollExplanationBotCommand(Poll) : null, commandStr, true);
+        else if (botCommand is ChangePollExplanationBotCommand)
+            ExecuteBotCommand(null, commandStr, true);
     }
 
-    const string skip = "Skip";
-    readonly IEnumerable<KeyboardButton> SkipKeyboardButton = new List<KeyboardButton>() { new(skip) };
-    void ExecuteBotCommand(Func<BaseBotCommand>? createBotCommand, string commandStr, bool isSkippedCommand = false) 
+    const string skipStr = "Skip";
+    readonly IEnumerable<KeyboardButton> SkipKeyboardButton = new List<KeyboardButton>() { new(skipStr) };
+    void ExecuteBotCommand(Func<BaseBotCommand>? createBotCommand, string commandStr, bool isSkippedCommand = false)
     {
         if (botCommand is not null)
         {
-            bool isSkip = isSkippedCommand && commandStr == skip;
+            bool isSkip = isSkippedCommand && commandStr == skipStr;
 
             if (!isSkip && !(botCommand.IsFinished ?? false))
             {
@@ -74,7 +54,7 @@ public class CreatePollBotCommand : ManyStepsPollBotCommand
 
             if (isSkip || (botCommand.IsFinished ?? false))
             {
-                if(createBotCommand is null)
+                if (createBotCommand is null)
                 {
                     Poll = botCommand.Poll;
                     IsStrResponse = false;
@@ -83,13 +63,16 @@ public class CreatePollBotCommand : ManyStepsPollBotCommand
 
                     return;
                 }
-                
+
                 botCommand = createBotCommand();
                 botCommand.Execute(null);
                 MessageStr = botCommand.MessageStr;
+                AddReplyMarkup(isSkippedCommand);
+
+                return;
             }
 
-            AddReplyMarkup(isSkippedCommand);
+            AddReplyMarkup(false);
         }
     }
 

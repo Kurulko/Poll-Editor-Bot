@@ -13,8 +13,10 @@ public class HelpBotCommand : BaseBotCommand
     const string onlyForQuizzes = "only for quizzes";
     const string optional = "optional";
     const string ifPresent = "if present";
+
     string HTMLItalicInBrackets(params string[] strs)
         => $"<i>({string.Join(", ", strs)})</i>";
+
     public override void Execute(string? commandStr)
     {
         string resultStr = string.Empty;

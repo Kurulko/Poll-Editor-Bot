@@ -33,7 +33,7 @@ public class PollEditorBotLauncher
     }
 
     readonly Dictionary<long, MessageReceiver> messageReceivers = new();
-
+    string botName = string.Empty;
     public async Task StartReceivingAsync(CancellationTokenSource cts)
     {
         ReceiverOptions receiverOptions = new ReceiverOptions() { AllowedUpdates = Array.Empty<UpdateType>() };
@@ -45,34 +45,54 @@ public class PollEditorBotLauncher
             cts.Token);
 
         User me = await bot.GetMeAsync();
-        string fName = me.FirstName;
-        logger.LogInformationLine($"\"{fName}\" started listening ...");
+        botName = me.FirstName;
+        logger.LogInformationLine(botName, $"\"{botName}\" started listening ...");
     }
 
+    string GetSenderStr(Chat chat)
+    {
+        string senderStr = string.Empty;
 
+        senderStr += chat.FirstName;
+
+        if (chat.Username is string userName)
+            senderStr += $" (@{userName})";
+
+        return senderStr;
+    }
     async Task HandleUpdateAsync(Update update, CancellationTokenSource cts)
     {
         if (update.Message is { } message)
         {
             Chat chat = message.Chat;
-            logging.LogChatMessage(chat);
 
             int replyToMessageId = message.MessageId;
             long chatId = chat.Id;
 
-            if (message.Text is { } messageText)
-                await HandleTextMessageAsync(messageText, message.Entities, chatId, replyToMessageId, cts);
-            else if (message.Poll is { } messagePoll)
-                await HandlePollMessageAsync(messagePoll, chatId, replyToMessageId, cts);
+            if (chat.Type == ChatType.Private)
+            {
+                string senderStr = GetSenderStr(chat);
+
+                if (message.Text is { } messageText)
+                    await HandleTextMessageAsync(senderStr, messageText, message.Entities, chatId, replyToMessageId, cts);
+                else if (message.Poll is { } messagePoll)
+                    await HandlePollMessageAsync(senderStr, messagePoll, chatId, replyToMessageId, cts);
+                else
+                    await HandleAnotherMessageTypeAsync(chatId, replyToMessageId, cts);
+            }
             else
-                await HandleAnotherMessageTypeAsync(chatId, replyToMessageId, cts);
+            {
+                await LogWarningMessage(TelegramException.OnlyPrivateChatsSupported, chatId, replyToMessageId, null, cts);
+            }
         }
     }
 
-    async Task HandleTextMessageAsync(string messageText, IEnumerable<MessageEntity>? messageEntities, long chatId, int replyToMessageId, CancellationTokenSource cts)
+    async Task HandleTextMessageAsync(string sender, string messageText, IEnumerable<MessageEntity>? messageEntities, long chatId, int replyToMessageId, CancellationTokenSource cts)
     {
         try
         {
+            logging.LogCommandStrMessage(sender, messageText);
+
             if (!messageReceivers.ContainsKey(chatId))
                 messageReceivers.Add(chatId, new());
 
@@ -89,7 +109,7 @@ public class PollEditorBotLauncher
                 currentMessageReceiver.BotCommand.MessageEntities = messageEntities;
             }
 
-            currentMessageReceiver.Execute(messageText);
+            await currentMessageReceiver.Execute(messageText);
 
             BaseBotCommand botCommand = currentMessageReceiver.BotCommand!;
 
@@ -98,18 +118,20 @@ public class PollEditorBotLauncher
 
             if (isFinished && !botCommand.IsStrResponse)
             {
-                await messageSender.SendPollMessageAsync(botCommand.Poll!, chatId, replyToMessageId, replyMarkup, cts);
+                var poll = botCommand.Poll!;
+                await logging.LogPollMessageAsync(poll);
+                await messageSender.SendPollMessageAsync(poll, chatId, replyToMessageId, replyMarkup, cts);
             }
             else if (botCommand.MessageStr is { } messageStr)
             {
+                await logging.LogStrMessage(messageStr);
                 await messageSender.SendTextMessageAsync(messageStr, chatId, replyToMessageId, replyMarkup, cts);
             }
-
-            logging.LogCommandStrMessage(messageText);
         }
         catch (PollEditorException botExc)
         {
             string messageExc = botExc.Message;
+            logger.LogWarningLine(messageExc);
             await messageSender.SendTextMessageAsync(messageExc, chatId, replyToMessageId, null, cts);
         }
         catch (ApiRequestException ex)
@@ -117,11 +139,11 @@ public class PollEditorBotLauncher
             int delay = ex.Parameters?.RetryAfter ?? 0;
             if (delay > 0)
             {
-                logger.LogWarningLine(TelegramException.TooManyRequests(delay));
+                string messageExc = TelegramException.TooManyRequests(delay);
+                logger.LogWarningLine(messageExc);
+                await messageSender.SendTextMessageAsync(messageExc, chatId, replyToMessageId, null, cts);
                 Task.Delay(delay * 1000).Wait();
             }
-
-            await messageSender.SendTextMessageAsync(messageText, chatId, replyToMessageId, null, cts);
         }
         catch (Exception exc)
         {
@@ -133,7 +155,7 @@ public class PollEditorBotLauncher
     bool IsMessageEntitiesTypeSupported(IEnumerable<MessageEntity>? messageEntities)
         => messageEntities?.All(msgEntity => Enum.IsDefined(msgEntity.Type)) ?? true;
 
-    async Task HandlePollMessageAsync(Poll pollMessage, long chatId, int replyToMessageId, CancellationTokenSource cts)
+    async Task HandlePollMessageAsync(string sender, Poll pollMessage, long chatId, int replyToMessageId, CancellationTokenSource cts)
     {
         if (PollHelper.IfQuizSentCorrectly(pollMessage))
         {
@@ -144,8 +166,8 @@ public class PollEditorBotLauncher
             else
                 messageReceivers[chatId] = newMessageReceiver;
 
-            await messageSender.SendTextMessageAsync("Now, please send one of the available commands.", chatId, replyToMessageId, null, cts);
-            logging.LogPollMessage(pollMessage);
+            await messageSender.SendTextMessageAsync("Now, please send one of the available commands.", chatId, replyToMessageId, new ReplyKeyboardRemove(), cts);
+            await logging.LogPollMessageAsync(pollMessage);
         }
         else
         {
@@ -154,7 +176,7 @@ public class PollEditorBotLauncher
     }
 
     async Task HandleAnotherMessageTypeAsync(long chatId, int replyToMessageId, CancellationTokenSource cts)
-        => await LogWarningMessage(TelegramException.MessageTypeNotSuitable, chatId, replyToMessageId, null, cts);
+            => await LogWarningMessage(TelegramException.MessageTypeNotSuitable, chatId, replyToMessageId, null, cts);
 
     async Task LogWarningMessage(string warningStr, long chatId, int replyToMessageId, IReplyMarkup? replyMarkup, CancellationTokenSource cts)
     {
@@ -171,10 +193,11 @@ public class PollEditorBotLauncher
             {
                 logger.LogErrorLine(TelegramException.TooManyRequests(delay));
                 Task.Delay(delay * 1000).Wait();
+                return Task.CompletedTask;
             }
         }
-        else
-            logger.LogError(exc.Message);
+        
+        logger.LogError(exc.Message);
 
         return Task.CompletedTask;
         //await StopBotAsync(cts);

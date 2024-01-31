@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PollEditorBot.Settings;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,87 +15,104 @@ public class Logging
     public Logging(ILogger logger)
         => this.logger = logger;
 
-    public void LogCommandStrMessage(string commandStr)
-        => LogMessage(() =>
-        {
-            logger.LogInformationLine($"Command: {commandStr}");
-        });
+    public void LogCommandStrMessage(string sender, string commandStr)
+        => LogMessage(() => logger.LogInformationLine(sender, $"Command: {commandStr}"));
 
-    public void LogChatMessage(Chat chat)
-        => LogMessage(() =>
+    public void LogStrMessage(string sender, string messageStr)
+        => LogMessage(() => logger.LogInformationLine(sender, messageStr));
+    public async Task LogStrMessage(string commandStr)
+    {
+        string currentBotName = (await TelegramSettings.GetCurrentBotName())!;
+        LogStrMessage(currentBotName, commandStr);
+    }
+
+    public async Task LogChatMessageAsync(Chat chat)
+        => await LogMessageAsync(async () =>
         {
-            logger.LogInformationLine($"Chat Id: {chat.Id}\n");
+            string resultStr = string.Empty;
+
+            resultStr += $"\nChat Id: {chat.Id}";
 
             ChatType chatType = chat.Type;
-            logger.LogDebugLine($"Type: {chat.Type}");
+            resultStr += $"\nType: {chatType}";
 
             if (chatType == ChatType.Private)
             {
                 if (chat.Username is { })
-                    logger.LogDebugLine($"Username: @{chat.Username}");
+                    resultStr += $"\nUsername: @{chat.Username}";
 
                 if (chat.FirstName is { })
-                    logger.LogDebugLine($"FirstName: {chat.FirstName}");
+                    resultStr += $"\nFirstName: {chat.FirstName}";
 
                 if (chat.LastName is { })
-                    logger.LogDebugLine($"LastName: {chat.LastName}");
+                    resultStr += $"\nLastName: {chat.LastName}";
 
                 if (chat.Bio is { })
-                    logger.LogDebugLine($"Bio: {chat.Bio}");
+                    resultStr += $"\nBio: {chat.Bio}";
             }
             else
             {
                 if (chat.InviteLink is { })
-                    logger.LogDebugLine($"InviteLink: {chat.InviteLink}");
+                    resultStr += $"\nInviteLink: {chat.InviteLink}";
 
                 if (chat.Title is { })
-                    logger.LogDebugLine($"Title: {chat.Title}");
+                    resultStr += $"\nTitle: {chat.Title}";
 
                 if (chat.Description is { })
-                    logger.LogDebugLine($"Description: {chat.Description}");
+                    resultStr += $"\nDescription: {chat.Description}";
             }
+
+            string currentBotName = (await TelegramSettings.GetCurrentBotName())!;
+            logger.LogInformation(currentBotName, resultStr + "\n");
         });
 
-    public void LogPollMessage(Poll poll)
-        => LogMessage(() =>
+    public async Task LogPollMessageAsync(Poll poll)
+        => await LogMessageAsync(async () =>
         {
-            logger.LogInformationLine($"Poll Id: {poll.Id}\n");
-            logger.LogDebugLine((poll.IsAnonymous ? "Anonymous" : "Public") + " " + (poll.Type == "quiz" ? "quiz" : "poll"));
-            logger.LogDebugLine($"Question: {poll.Question}\n");
-            logger.LogDebugLine("Asnwers:");
+            string resultStr = string.Empty;
+
+            resultStr += $"Poll Id: {poll.Id}\n";
+            resultStr += "\n" + (poll.IsAnonymous ? "Anonymous" : "Public") + " " + (poll.Type == "quiz" ? "quiz" : "poll");
+            resultStr += $"\nQuestion: {poll.Question}";
+            resultStr += "\n\nAsnwers:";
 
             var options = poll.Options;
             for (int i = 0; i < options.Length; i++)
-                logger.LogDebugLine($"\t {i + 1}) {options[i].Text} - {options[i].VoterCount} votes");
+                resultStr += $"\n\t {i + 1}) {options[i].Text} - {options[i].VoterCount} votes";
 
-            logger.LogDebugLine("\n");
+            resultStr += "\n";
 
             if (poll.AllowsMultipleAnswers)
             {
-                logger.LogDebugLine("Multiply Answers");
+                resultStr += "\nMultiply Answers";
             }
             else if (poll.CorrectOptionId is { } correctOptionId)
             {
                 PollOption correctOption = options[correctOptionId];
-                logger.LogDebugLine($"Correct Option: {correctOptionId + 1} - {correctOption.Text} - {correctOption.VoterCount} votes");
-                logger.LogDebugLine($"Explanations: {poll.Explanation}\n");
+                resultStr += $"\nCorrect Option: {correctOptionId + 1} - {correctOption.Text} - {correctOption.VoterCount} votes";
+                resultStr += $"\nExplanations: {poll.Explanation}";
             }
 
             if (poll.OpenPeriod is { } openPeriod)
-                logger.LogDebugLine($"Oper period: {openPeriod} seconds");
+                resultStr += $"\nOper period: {openPeriod} seconds";
 
-            logger.LogDebugLine($"Total votes: {poll.TotalVoterCount}");
+            resultStr += $"\nTotal votes: {poll.TotalVoterCount}";
+
+            string currentBotName = (await TelegramSettings.GetCurrentBotName())!;
+            logger.LogInformationLine(currentBotName, resultStr + "\n");
         });
 
     void LogMessage(Action action)
     {
         DivideMessageStr();
-
         action();
-
+    }
+    async Task LogMessageAsync(Func<Task> actionAsync)
+    {
         DivideMessageStr();
+        await actionAsync();
     }
 
     void DivideMessageStr()
-        => logger.LogDebugLine(new string('-', 25));
+        => logger.LogDebugLine(new string ('-', 25));
 }

@@ -19,15 +19,9 @@ public abstract class ChangeQuizBotCommand : TwoStepsPollBotCommand
     protected override void ExecuteFirstStep()
     {
         if (PollHelper.IsQuiz(Poll))
-        {
             ExecuteQuizFirstStep();
-        }
         else
-        {
-            MessageStr = $"Firstly change the poll type, by using this command <code>{CommandsStr.ChangePollType}</code>";
-            IsFinished = true;
-            IsStrResponse = true;
-        }
+            throw PollEditorException.QuizRequiredToCommit();
     }
 
 }

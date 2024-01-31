@@ -28,7 +28,14 @@ public class ChangeOptionsBotCommand : ManyStepsPollBotCommand
         if (countOfOptions is null)
         {
             options = commandStr.Split('\n');
-            Poll = pollEditor.ChangePollOptions(options);
+            int length = options.Length;
+
+            if (length > TelegramSettings.MaxPollCountOfOptions)
+                throw PollEditorException.MaxCountOfOptionsReached();
+            else if(length < TelegramSettings.MinPollCountOfOptions)
+                throw PollEditorException.MinCountOfOptionsReached();
+            else
+                Poll = pollEditor.ChangePollOptions(options);
         }
 
         if (!IsQuiz)

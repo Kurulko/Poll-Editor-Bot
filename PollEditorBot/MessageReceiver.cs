@@ -4,6 +4,7 @@ using PollEditorBot.Commands.ManyStepsPollBotCommands;
 using PollEditorBot.Commands.OneStep;
 using PollEditorBot.Commands.TwoSteps;
 using PollEditorBot.Exceptions;
+using PollEditorBot.Settings;
 using Telegram.Bot.Types;
 
 namespace PollEditorBot;
@@ -18,7 +19,7 @@ public class MessageReceiver
     public BaseBotCommand? BotCommand { get; private set; }
     bool IsFinished => BotCommand?.IsFinished ?? true;
 
-    public void Execute(string commandStr)
+    public async Task Execute(string commandStr)
     {
         bool isBotCommand = commandStr.StartsWith("/");
         if (IsFinished || isBotCommand)
