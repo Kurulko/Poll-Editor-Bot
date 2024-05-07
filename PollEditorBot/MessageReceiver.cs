@@ -44,6 +44,7 @@ public class MessageReceiver
                     CommandsStr.InsertPollOption => new InsertPollOptionBotCommand(poll!),
                     CommandsStr.AddPollOptionToEnd => new AddPollOptionToEndBotCommand(poll!),
                     CommandsStr.DeletePollOption => new DeletePollOptionBotCommand(poll!),
+                    CommandsStr.AddLinkToPoll => new AddLinkToPollCommand(poll!),
                     _ => throw PollEditorException.PollRequired()
                 };
             }
@@ -85,6 +86,7 @@ public class MessageReceiver
             case CommandsStr.AddPollOptionToEnd:
             case CommandsStr.InsertPollOption:
             case CommandsStr.DeletePollOption:
+            case CommandsStr.AddLinkToPoll:
                 isPollBotCommand = true;
                 break;
             case CommandsStr.Start:

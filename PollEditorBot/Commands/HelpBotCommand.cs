@@ -35,6 +35,7 @@ public class HelpBotCommand : BaseBotCommand
         resultStr += $"• {CommandsStr.ChangePollOption} - edit a poll option\n";
         resultStr += $"• {CommandsStr.InsertPollOption} - insert a poll option\n";
         resultStr += $"• {CommandsStr.AddPollOptionToEnd} - add a poll option to end\n";
+        resultStr += $"• {CommandsStr.AddLinkToPoll} - add a link to the poll\n";
         resultStr += $"• {CommandsStr.DeletePollOption} - remove a poll option\n";
         resultStr += $"• {CommandsStr.ChangePollOptions} - edit all poll options\n";
         resultStr += $"• {CommandsStr.ChangePollIsMultipleAnswers} - edit - multiple answers\n";

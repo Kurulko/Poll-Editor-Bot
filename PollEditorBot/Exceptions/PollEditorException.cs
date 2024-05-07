@@ -18,6 +18,8 @@ public class PollEditorException : Exception
 
     public static PollEditorException InccorectLength(int minLength, int maxLength)
        => new($"Length must be between {minLength} and {maxLength} characters.");
+    public static PollEditorException InvalidLink()
+       => new($"Link is invalid");
     public static PollEditorException InccorectCountOfSeconds(int minCountOfSeconds, int maxCountOfSeconds)
        => new($"Count of seconds must be between {minCountOfSeconds} and {maxCountOfSeconds} characters.");
     public static PollEditorException TypeBooleanRequired()

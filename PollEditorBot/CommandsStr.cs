@@ -28,4 +28,5 @@ public struct CommandsStr
     public const string InsertPollOption = "/insert_option";
     public const string AddPollOptionToEnd = "/add_option_to_end";
     public const string DeletePollOption = "/delete_option";
+    public const string AddLinkToPoll = "/add_link";
 }
